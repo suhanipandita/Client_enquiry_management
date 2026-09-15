@@ -1,45 +1,67 @@
 const db = require('../db');
+const { findOrCreateClient } = require('./clientController');
 
 // CREATE a new enquiry
 exports.createEnquiry = async (req, res) => {
   try {
     const {
-      client_name, company_name, mobile_number, email, address,
+      client_name, company_name, mobile_number, email, address, // client fields
       enquiry_date, source, service_required, requirement_description,
-      assigned_employee, follow_up_date, status, notes
+      assigned_employee_id, follow_up_date, status, notes
     } = req.body;
+
+    const client_id = await findOrCreateClient({ client_name, company_name, mobile_number, email, address });
 
     const [result] = await db.query(
       `INSERT INTO enquiries
-       (client_name, company_name, mobile_number, email, address,
-        enquiry_date, source, service_required, requirement_description,
-        assigned_employee, follow_up_date, status, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [client_name, company_name, mobile_number, email, address,
-       enquiry_date, source, service_required, requirement_description,
-       assigned_employee, follow_up_date, status || 'New', notes]
+       (client_id, enquiry_date, source, service_required, requirement_description,
+        assigned_employee_id, follow_up_date, status, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [client_id, enquiry_date, source, service_required, requirement_description,
+       assigned_employee_id, follow_up_date, status || 'New', notes]
     );
 
-    res.status(201).json({ id: result.insertId, message: 'Enquiry created successfully' });
+    res.status(201).json({ id: result.insertId, client_id, message: 'Enquiry created successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Error creating enquiry', error: err.message });
   }
 };
 
-// READ all enquiries
+// READ all enquiries (with client + employee details joined in)
 exports.getAllEnquiries = async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM enquiries ORDER BY created_at DESC');
+    const [rows] = await db.query(
+      `SELECT
+         e.id, e.enquiry_date, e.source, e.service_required, e.requirement_description,
+         e.follow_up_date, e.status, e.notes, e.created_at,
+         c.id AS client_id, c.client_name, c.company_name, c.mobile_number, c.email, c.address,
+         emp.id AS employee_id, emp.employee_name
+       FROM enquiries e
+       JOIN clients c ON e.client_id = c.id
+       LEFT JOIN employees emp ON e.assigned_employee_id = emp.id
+       ORDER BY e.created_at DESC`
+    );
     res.json(rows);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching enquiries', error: err.message });
   }
 };
 
-// READ one enquiry by ID
+// READ one enquiry by ID (with client + employee details joined in)
 exports.getEnquiryById = async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM enquiries WHERE id = ?', [req.params.id]);
+    const [rows] = await db.query(
+      `SELECT
+         e.id, e.enquiry_date, e.source, e.service_required, e.requirement_description,
+         e.follow_up_date, e.status, e.notes, e.created_at,
+         c.id AS client_id, c.client_name, c.company_name, c.mobile_number, c.email, c.address,
+         emp.id AS employee_id, emp.employee_name
+       FROM enquiries e
+       JOIN clients c ON e.client_id = c.id
+       LEFT JOIN employees emp ON e.assigned_employee_id = emp.id
+       WHERE e.id = ?`,
+      [req.params.id]
+    );
     if (rows.length === 0) return res.status(404).json({ message: 'Enquiry not found' });
     res.json(rows[0]);
   } catch (err) {
@@ -47,24 +69,21 @@ exports.getEnquiryById = async (req, res) => {
   }
 };
 
-// UPDATE an enquiry
+// UPDATE an enquiry (enquiry fields only — client details are updated separately via clientController)
 exports.updateEnquiry = async (req, res) => {
   try {
     const {
-      client_name, company_name, mobile_number, email, address,
       enquiry_date, source, service_required, requirement_description,
-      assigned_employee, follow_up_date, status, notes
+      assigned_employee_id, follow_up_date, status, notes
     } = req.body;
 
     const [result] = await db.query(
       `UPDATE enquiries SET
-       client_name=?, company_name=?, mobile_number=?, email=?, address=?,
        enquiry_date=?, source=?, service_required=?, requirement_description=?,
-       assigned_employee=?, follow_up_date=?, status=?, notes=?
+       assigned_employee_id=?, follow_up_date=?, status=?, notes=?
        WHERE id=?`,
-      [client_name, company_name, mobile_number, email, address,
-       enquiry_date, source, service_required, requirement_description,
-       assigned_employee, follow_up_date, status, notes, req.params.id]
+      [enquiry_date, source, service_required, requirement_description,
+       assigned_employee_id, follow_up_date, status, notes, req.params.id]
     );
 
     if (result.affectedRows === 0) return res.status(404).json({ message: 'Enquiry not found' });
@@ -85,14 +104,18 @@ exports.deleteEnquiry = async (req, res) => {
   }
 };
 
-// SEARCH enquiries
+// SEARCH enquiries (matches against joined client fields)
 exports.searchEnquiries = async (req, res) => {
   try {
     const { keyword } = req.query;
     const [rows] = await db.query(
-      `SELECT * FROM enquiries
-       WHERE client_name LIKE ? OR company_name LIKE ? OR mobile_number LIKE ? OR email LIKE ?
-       ORDER BY created_at DESC`,
+      `SELECT
+         e.id, e.status, e.enquiry_date,
+         c.client_name, c.company_name, c.mobile_number, c.email
+       FROM enquiries e
+       JOIN clients c ON e.client_id = c.id
+       WHERE c.client_name LIKE ? OR c.company_name LIKE ? OR c.mobile_number LIKE ? OR c.email LIKE ?
+       ORDER BY e.created_at DESC`,
       [`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`]
     );
     res.json(rows);
