@@ -21,3 +21,40 @@ exports.findOrCreateClient = async (clientData) => {
 
   return result.insertId;
 };
+
+// READ all clients
+exports.getAllClients = async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM clients ORDER BY client_name');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching clients', error: err.message });
+  }
+};
+
+// READ one client by ID
+exports.getClientById = async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM clients WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ message: 'Client not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching client', error: err.message });
+  }
+};
+
+// UPDATE a client (e.g. their phone number or address changed)
+exports.updateClient = async (req, res) => {
+  try {
+    const { client_name, company_name, mobile_number, email, address } = req.body;
+    const [result] = await db.query(
+      `UPDATE clients SET client_name=?, company_name=?, mobile_number=?, email=?, address=?
+       WHERE id=?`,
+      [client_name, company_name, mobile_number, email, address, req.params.id]
+    );
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Client not found' });
+    res.json({ message: 'Client updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating client', error: err.message });
+  }
+};

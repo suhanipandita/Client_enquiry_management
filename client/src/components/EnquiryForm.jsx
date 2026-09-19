@@ -1,19 +1,28 @@
 import { useState, useEffect } from 'react';
+import { getEmployees } from '../api/employeeApi';
 
 const emptyForm = {
   client_name: '', company_name: '', mobile_number: '', email: '',
   address: '', enquiry_date: '', source: 'Call', service_required: 'Website Development',
-  requirement_description: '', assigned_employee: '', follow_up_date: '',
+  requirement_description: '', assigned_employee_id: '', follow_up_date: '',
   status: 'New', notes: ''
 };
 
 function EnquiryForm({ onSubmit, editingEnquiry, onCancelEdit }) {
   const [formData, setFormData] = useState(emptyForm);
+  const [employees, setEmployees] = useState([]);
 
-  // When editingEnquiry changes (user clicked "Edit" on a row), fill the form with its data
+  // Load the employee list once, when the form first mounts
+  useEffect(() => {
+    getEmployees().then(res => setEmployees(res.data));
+  }, []);
+
   useEffect(() => {
     if (editingEnquiry) {
-      setFormData(editingEnquiry);
+      setFormData({
+        ...editingEnquiry,
+        assigned_employee_id: editingEnquiry.employee_id || ''
+      });
     } else {
       setFormData(emptyForm);
     }
@@ -52,7 +61,14 @@ function EnquiryForm({ onSubmit, editingEnquiry, onCancelEdit }) {
       </select>
 
       <textarea name="requirement_description" value={formData.requirement_description} onChange={handleChange} placeholder="Requirement Description" />
-      <input name="assigned_employee" value={formData.assigned_employee} onChange={handleChange} placeholder="Assigned Employee" />
+
+      <select name="assigned_employee_id" value={formData.assigned_employee_id} onChange={handleChange}>
+        <option value="">-- Assign Employee --</option>
+        {employees.map(emp => (
+          <option key={emp.id} value={emp.id}>{emp.employee_name}</option>
+        ))}
+      </select>
+
       <input type="date" name="follow_up_date" value={formData.follow_up_date} onChange={handleChange} />
 
       <select name="status" value={formData.status} onChange={handleChange}>

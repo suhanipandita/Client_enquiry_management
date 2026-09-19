@@ -21,6 +21,12 @@ app.get('/api/health', async (req, res) => {
 const enquiryRoutes = require('./routes/enquiryRoutes');
 app.use('/api/enquiries', enquiryRoutes);
 
+const employeeRoutes = require('./routes/employeeRoutes');
+app.use('/api/employees', employeeRoutes);
+
+const clientRoutes = require('./routes/clientRoutes');
+app.use('/api/clients', clientRoutes);
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
