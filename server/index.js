@@ -27,6 +27,9 @@ app.use('/api/employees', employeeRoutes);
 const clientRoutes = require('./routes/clientRoutes');
 app.use('/api/clients', clientRoutes);
 
+const quotationRoutes = require('./routes/quotationRoutes');
+app.use('/api/quotations', quotationRoutes);
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

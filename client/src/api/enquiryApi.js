@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 const API_URL = 'http://localhost:5001/api/enquiries';
+const CLIENT_URL = 'http://localhost:5001/api/clients';
 
+export const getClients = () => axios.get(CLIENT_URL);
 export const getEnquiries = () => axios.get(API_URL);
 export const getEnquiryById = (id) => axios.get(`${API_URL}/${id}`);
 export const createEnquiry = (data) => axios.post(API_URL, data);
