@@ -3,6 +3,15 @@ import Layout from './components/Layout';
 import EnquiriesPage from './pages/EnquiriesPage';
 import QuotationsPage from './pages/QuotationsPage';
 
+function ComingSoon({ name }) {
+  return (
+    <div>
+      <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>{name}</h1>
+      <p style={{ color: 'var(--muted)' }}>This module hasn't been built yet.</p>
+    </div>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -10,11 +19,15 @@ function App() {
         <Route path="/" element={<Layout pageTitle="Dashboard"><div>Dashboard coming soon</div></Layout>} />
         <Route path="/enquiries" element={<Layout pageTitle="Client Enquiries"><EnquiriesPage /></Layout>} />
         <Route path="/quotations" element={<Layout pageTitle="Quotations"><QuotationsPage /></Layout>} />
-        <Route path="/payments" element={<Layout pageTitle="Client Payments"><div> Client Payments coming soon</div></Layout>} />
-        <Route path="/invoices" element={<Layout pageTitle="Invoices"><div>Invoices coming soon</div></Layout>} />
-        <Route path="/employee-payments" element={<Layout pageTitle="Employee Payments"><div>Employee-payments coming soon</div></Layout>} />
-        <Route path="/expenses" element={<Layout pageTitle="Expenses"><div>Expenses coming soon</div></Layout>} />
-        <Route path="/amc" element={<Layout pageTitle="Website AMC"><div>Website AMC coming soon</div></Layout>} />
+        {[
+          ['/payments', 'Client Payments'],
+          ['/invoices', 'Invoices'],
+          ['/employee-payments', 'Employee Payments'],
+          ['/expenses', 'Expenses'],
+          ['/amc', 'Website AMC'],
+        ].map(([path, name]) => (
+          <Route key={path} path={path} element={<Layout pageTitle={name}><ComingSoon name={name} /></Layout>} />
+        ))}
       </Routes>
     </BrowserRouter>
   );
