@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
+import DashboardPage from './pages/DashboardPage';
 import EnquiriesPage from './pages/EnquiriesPage';
 import QuotationsPage from './pages/QuotationsPage';
 
@@ -16,18 +17,21 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Layout pageTitle="Dashboard"><div>Dashboard coming soon</div></Layout>} />
-        <Route path="/enquiries" element={<Layout pageTitle="Client Enquiries"><EnquiriesPage /></Layout>} />
-        <Route path="/quotations" element={<Layout pageTitle="Quotations"><QuotationsPage /></Layout>} />
-        {[
-          ['/payments', 'Client Payments'],
-          ['/invoices', 'Invoices'],
-          ['/employee-payments', 'Employee Payments'],
-          ['/expenses', 'Expenses'],
-          ['/amc', 'Website AMC'],
-        ].map(([path, name]) => (
-          <Route key={path} path={path} element={<Layout pageTitle={name}><ComingSoon name={name} /></Layout>} />
-        ))}
+        <Route element={<Layout />}>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/enquiries" element={<EnquiriesPage />} />
+          <Route path="/quotations" element={<QuotationsPage />} />
+          {[
+            ['/payments', 'Client Payments'],
+            ['/invoices', 'Invoices'],
+            ['/employee-payments', 'Employee Payments'],
+            ['/expenses', 'Expenses'],
+            ['/amc', 'Website AMC'],
+          ].map(([path, name]) => (
+            <Route key={path} path={path} element={<ComingSoon name={name} />} />
+          ))}
+          <Route path="*" element={<ComingSoon name="Page not found" />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

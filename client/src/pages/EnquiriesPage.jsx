@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import EnquiryForm from '../components/EnquiryForm';
 import StatusBadge from '../components/StatusBadge';
 import { getEnquiries, createEnquiry, updateEnquiry, deleteEnquiry, searchEnquiries } from '../api/enquiryApi';
@@ -11,13 +12,22 @@ function EnquiriesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showPanel, setShowPanel] = useState(false);
   const [editingEnquiry, setEditingEnquiry] = useState(null);
-
+  
   const loadEnquiries = async () => {
     const res = await getEnquiries();
     setEnquiries(res.data);
   };
 
   useEffect(() => { loadEnquiries(); }, []);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get('new')) {
+      setEditingEnquiry(null);
+      setShowPanel(true);
+      setSearchParams({}, { replace: true });   // clear ?new=1 so a refresh doesn't reopen it
+    }
+  }, []);
 
   const handleSubmit = async (formData) => {
     if (editingEnquiry) {

@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+
 import StatCard from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
 import QuotationForm from '../components/QuotationForm';
@@ -15,6 +17,15 @@ function QuotationsPage() {
   };
   useEffect(() => { load(); }, []);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get('new')) {
+      setEditingQuotation(null);
+      setShowModal(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, []);
+  
   const handleSubmit = async (data) => {
     if (editingQuotation) {
       await updateQuotation(editingQuotation.id, data);
