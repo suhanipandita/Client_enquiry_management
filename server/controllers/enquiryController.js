@@ -107,16 +107,20 @@ exports.deleteEnquiry = async (req, res) => {
 // SEARCH enquiries (matches against joined client fields)
 exports.searchEnquiries = async (req, res) => {
   try {
-    const { keyword } = req.query;
+    const { keyword = '' } = req.query;
+    const like = `%${keyword}%`;
     const [rows] = await db.query(
       `SELECT
-         e.id, e.status, e.enquiry_date,
-         c.client_name, c.company_name, c.mobile_number, c.email
+         e.id, e.enquiry_date, e.source, e.service_required, e.requirement_description,
+         e.follow_up_date, e.status, e.notes, e.created_at,
+         c.id AS client_id, c.client_name, c.company_name, c.mobile_number, c.email, c.address,
+         emp.id AS employee_id, emp.employee_name
        FROM enquiries e
        JOIN clients c ON e.client_id = c.id
+       LEFT JOIN employees emp ON e.assigned_employee_id = emp.id
        WHERE c.client_name LIKE ? OR c.company_name LIKE ? OR c.mobile_number LIKE ? OR c.email LIKE ?
        ORDER BY e.created_at DESC`,
-      [`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`]
+      [like, like, like, like]
     );
     res.json(rows);
   } catch (err) {

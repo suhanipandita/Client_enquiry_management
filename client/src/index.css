@@ -273,3 +273,73 @@ tbody tr:hover td { background: #FBF8F0; }
 }
 
 :root { --nav-space: 96px; }
+
+/* ---------- Pill language: buttons, fields, modal ---------- */
+.btn-primary, .btn-secondary {
+  border-radius: 999px; padding: 12px 22px;
+  font: inherit; font-weight: 600; font-size: 15px; cursor: pointer;
+}
+.btn-primary { background: var(--amber); color: var(--ink); border: 0; }
+.btn-primary:hover { background: #F8CD8A; }
+.btn-secondary { background: transparent; color: var(--ink); border: 1.5px solid var(--border); }
+.btn-secondary:hover { background: var(--cream); border-color: #CFC9B8; }
+
+.field input, .field select, .field textarea {
+  border-radius: 12px; border: 1px solid var(--border); background: #fff;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: 2px solid var(--teal); outline-offset: -1px;
+}
+.modal-card { border-radius: 24px; }
+
+/* ---------- Page header, toolbar, tabs ---------- */
+.page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 28px; }
+.page-title { margin: 0; font-size: clamp(30px, 4vw, 44px); font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; }
+.page-sub { margin: 8px 0 0; color: var(--muted); font-size: 16px; }
+
+.toolbar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.search {
+  flex: 1; min-width: 240px; padding: 13px 20px; border-radius: 999px;
+  border: 1px solid var(--border); background: #fff; font: inherit; font-size: 15px;
+}
+.search:focus { outline: 2px solid var(--teal); outline-offset: -1px; }
+
+.tabs { display: flex; gap: 2px; padding: 4px; background: #fff; border: 1px solid var(--border); border-radius: 999px; }
+.tab {
+  border: 0; background: transparent; padding: 9px 18px; border-radius: 999px;
+  font: inherit; font-size: 14px; font-weight: 500; color: var(--ink); cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.tab:hover:not(.active) { background: var(--cream); }
+.tab.active { background: var(--teal); color: var(--amber); }
+
+/* ---------- Table ---------- */
+.table-card { background: #fff; border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+.table-scroll { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left; font-size: 13px; font-weight: 500; color: var(--muted);
+  padding: 16px 22px 12px; border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.data-table td { padding: 16px 22px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.data-table tbody tr:last-child td { border-bottom: 0; }
+.data-table .num { text-align: right; white-space: nowrap; }
+.cell-strong { font-weight: 600; }
+.cell-sub { font-size: 14px; color: var(--muted); margin-top: 2px; }
+.empty-cell { padding: 48px 22px; text-align: center; color: var(--muted); }
+.table-foot { padding: 14px 22px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--border); }
+
+.link-btn {
+  background: none; border: 0; padding: 0; font: inherit; font-weight: 600;
+  color: var(--teal); cursor: pointer; border-bottom: 1.5px solid var(--amber);
+}
+.link-btn:hover { border-bottom-color: var(--teal); }
+
+/* ---------- Status tag ---------- */
+.status {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 4px 12px 4px 10px; border-radius: 999px;
+  border: 1px solid var(--border); background: #fff;
+  font-size: 13px; font-weight: 500; white-space: nowrap;
+}
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dot, #8A8F8C); }
