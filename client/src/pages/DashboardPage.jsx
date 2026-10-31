@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import StatusBadge from '../components/StatusBadge';
+import Stat from '../components/Stat';
 import { getEnquiries } from '../api/enquiryApi';
 import { getQuotations } from '../api/quotationApi';
 
@@ -13,34 +14,6 @@ const toLocalDate = (s) => {
   return new Date(y, m - 1, d);
 };
 const shortDate = (s) => toLocalDate(s).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-
-function useCountUp(target, duration = 900) {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (reduce || !target) { setValue(target); return; }
-    let raf, start;
-    const tick = (now) => {
-      if (start === undefined) start = now;
-      const t = Math.min((now - start) / duration, 1);
-      setValue(Math.round(target * (1 - Math.pow(1 - t, 3))));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
-  return value;
-}
-
-function Stat({ label, value, format = (n) => n.toLocaleString('en-IN') }) {
-  const shown = useCountUp(value ?? 0);
-  return (
-    <div className="stat">
-      <div className="stat-value">{value == null ? '—' : format(shown)}</div>
-      <div className="stat-label">{label}</div>
-    </div>
-  );
-}
 
 function DashboardPage() {
   const [enquiries, setEnquiries] = useState([]);

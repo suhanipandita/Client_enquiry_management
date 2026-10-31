@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import StatCard from '../components/StatCard';
+import Stat from '../components/Stat';
 import StatusBadge from '../components/StatusBadge';
 import QuotationForm from '../components/QuotationForm';
+import { formatDate } from '../utils/dates';
 import { getQuotations, getQuotationById, createQuotation, updateQuotation } from '../api/quotationApi';
 
 function QuotationsPage() {
@@ -24,7 +25,7 @@ function QuotationsPage() {
       setShowModal(true);
       setSearchParams({}, { replace: true });
     }
-  }, []);
+  }, [searchParams, setSearchParams]);
   
   const handleSubmit = async (data) => {
     if (editingQuotation) {
@@ -52,51 +53,61 @@ function QuotationsPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+      <div className="page-head">
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0 }}>Quotations & Proposals</h1>
-          <p style={{ color: 'var(--muted)', marginTop: 4 }}>Create and manage client proposals.</p>
+          <h1 className="page-title">Quotations & Proposals</h1>
+          <p className="page-sub">Create and manage client proposals.</p>
         </div>
-        <button className="btn-primary" onClick={() => { setEditingQuotation(null); setShowModal(true); }}>+ New Quotation</button>
+        <button className="btn-primary" onClick={() => { setEditingQuotation(null); setShowModal(true); }}>
+          + New Quotation
+        </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.25rem' }}>
-        <StatCard icon="▢" iconBg="#F1F1F4" value={counts.total} label="Total Quotations" />
-        <StatCard icon="✓" iconBg="#E4F7EA" value={counts.accepted} label="Accepted" />
-        <StatCard icon="→" iconBg="#FDF3E1" value={counts.pendingSent} label="Pending / Sent" />
-        <StatCard icon="✕" iconBg="#FCE8EC" value={counts.rejected} label="Rejected" />
-      </div>
+      <section className="stat-strip">
+        <Stat label="Total Quotations" value={counts.total} />
+        <Stat label="Accepted" value={counts.accepted} />
+        <Stat label="Pending / Sent" value={counts.pendingSent} />
+        <Stat label="Rejected" value={counts.rejected} />
+      </section>
 
-      <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--border)', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              {['QUOTE NO.', 'CLIENT', 'TYPE', 'DATE', 'VALID UNTIL', 'AMOUNT', 'TOTAL (INCL. GST)', 'STATUS', ''].map(h => (
-                <th key={h} style={{ textAlign: 'left', fontSize: 12, color: 'var(--muted)', padding: '0.9rem 1.2rem', borderBottom: '1px solid var(--border)' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {quotations.length === 0 ? (
-              <tr><td colSpan={9} style={{ padding: '3rem', textAlign: 'center', color: 'var(--muted)' }}>No quotations yet.</td></tr>
-            ) : quotations.map(q => (
-              <tr key={q.id}>
-                <td style={{ padding: '1rem 1.2rem', borderBottom: '1px solid var(--border)', fontWeight: 600 }}>{q.quotation_number}</td>
-                <td style={{ padding: '1rem 1.2rem', borderBottom: '1px solid var(--border)' }}>{q.client_name}</td>
-                <td style={{ padding: '1rem 1.2rem', borderBottom: '1px solid var(--border)' }}>{q.proposal_type}</td>
-                <td style={{ padding: '1rem 1.2rem', borderBottom: '1px solid var(--border)' }}>{q.quotation_date?.slice(0, 10)}</td>
-                <td style={{ padding: '1rem 1.2rem', borderBottom: '1px solid var(--border)' }}>{q.valid_until?.slice(0, 10)}</td>
-                <td style={{ padding: '1rem 1.2rem', borderBottom: '1px solid var(--border)' }}>₹{Number(q.subtotal).toLocaleString('en-IN')}</td>
-                <td style={{ padding: '1rem 1.2rem', borderBottom: '1px solid var(--border)' }}>₹{Number(q.total_amount).toLocaleString('en-IN')}</td>
-                <td style={{ padding: '1rem 1.2rem', borderBottom: '1px solid var(--border)' }}><StatusBadge status={q.status} /></td>
-                <td style={{ padding: '1rem 1.2rem', borderBottom: '1px solid var(--border)' }}>
-                  <button onClick={() => openEdit(q)} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontWeight: 600, cursor: 'pointer' }}>View</button>
-                </td>
+      <div className="table-card">
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Quote No.</th>
+                <th>Client</th>
+                <th>Type</th>
+                <th>Date</th>
+                <th>Valid Until</th>
+                <th className="num">Amount</th>
+                <th className="num">Total (incl. GST)</th>
+                <th>Status</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        <div style={{ padding: '0.9rem 1.2rem', color: 'var(--muted)', fontSize: 13 }}>{quotations.length} quotations total</div>
+            </thead>
+            <tbody>
+              {quotations.length === 0 ? (
+                <tr><td colSpan={9} className="empty-cell">No quotations yet.</td></tr>
+              ) : quotations.map(q => (
+                <tr key={q.id}>
+                  <td><div className="cell-strong">{q.quotation_number}</div></td>
+                  <td>{q.client_name}</td>
+                  <td>{q.proposal_type}</td>
+                  <td>{formatDate(q.quotation_date)}</td>
+                  <td>{formatDate(q.valid_until)}</td>
+                  <td className="num">₹{Number(q.subtotal).toLocaleString('en-IN')}</td>
+                  <td className="num">₹{Number(q.total_amount).toLocaleString('en-IN')}</td>
+                  <td><StatusBadge status={q.status} /></td>
+                  <td className="num">
+                    <button className="link-btn" onClick={() => openEdit(q)}>View</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="table-foot">Showing {quotations.length} total quotations</div>
       </div>
 
       {showModal && (
@@ -106,7 +117,11 @@ function QuotationsPage() {
               <h2>{editingQuotation ? 'Edit Quotation' : 'New Quotation'}</h2>
               <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
             </div>
-            <QuotationForm onSubmit={handleSubmit} editingQuotation={editingQuotation} onCancel={() => { setShowModal(false); setEditingQuotation(null); }} />
+            <QuotationForm 
+              onSubmit={handleSubmit} 
+              editingQuotation={editingQuotation} 
+              onCancel={() => { setShowModal(false); setEditingQuotation(null); }} 
+            />
           </div>
         </div>
       )}
