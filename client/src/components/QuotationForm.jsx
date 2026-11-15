@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getClients } from '../api/enquiryApi'; // reuse your existing clients endpoint
+import { getClients } from '../api/enquiryApi';
 
 const emptyItem = { description: '', quantity: 1, rate: '' };
 const emptyForm = {
@@ -11,6 +11,7 @@ const emptyForm = {
 function QuotationForm({ onSubmit, editingQuotation, onCancel }) {
   const [formData, setFormData] = useState(emptyForm);
   const [clients, setClients] = useState([]);
+  const [error, setError] = useState('');
 
   useEffect(() => { getClients().then(res => setClients(res.data)); }, []);
 
@@ -23,6 +24,7 @@ function QuotationForm({ onSubmit, editingQuotation, onCancel }) {
     } else {
       setFormData(emptyForm);
     }
+    setError('');
   }, [editingQuotation]);
 
   const handleChange = (e) => {
@@ -39,11 +41,10 @@ function QuotationForm({ onSubmit, editingQuotation, onCancel }) {
   const addItem = () => setFormData({ ...formData, items: [...formData.items, { ...emptyItem }] });
 
   const removeItem = (index) => {
-    if (formData.items.length === 1) return; // always keep at least one row
+    if (formData.items.length === 1) return;
     setFormData({ ...formData, items: formData.items.filter((_, i) => i !== index) });
   };
 
-  // Live preview only — the server recalculates and is the source of truth
   const subtotal = formData.items.reduce((sum, i) => sum + (Number(i.quantity) || 0) * (Number(i.rate) || 0), 0);
   const taxable = Math.max(subtotal - Number(formData.discount || 0), 0);
   const gstAmount = formData.gst_applied ? taxable * 0.18 : 0;
@@ -51,12 +52,31 @@ function QuotationForm({ onSubmit, editingQuotation, onCancel }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setError('');
+
+    // Ensure valid_until is not earlier than quotation_date
+    if (formData.quotation_date && formData.valid_until && formData.valid_until < formData.quotation_date) {
+      setError('The "Valid Until" date cannot be earlier than the Quotation Date.');
+      return;
+    }
+
+    // Ensure at least one valid item line exists
+    if (!formData.items || formData.items.length === 0 || !formData.items[0].description.trim()) {
+      setError('Please add at least one valid service line item.');
+      return;
+    }
+
     onSubmit(formData);
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <div className="modal-body">
+        {error && (
+          <div style={{ background: '#FEE2E2', color: '#B91C1C', padding: '10px 14px', borderRadius: 8, fontSize: 14, marginBottom: 16, fontWeight: 500 }}>
+            {error}
+          </div>
+        )}
         <div className="field-grid">
           <div className="field">
             <label>Client*</label>
@@ -96,6 +116,7 @@ function QuotationForm({ onSubmit, editingQuotation, onCancel }) {
                 type="number" min="1" placeholder="Qty"
                 value={item.quantity}
                 onChange={(e) => handleItemChange(i, 'quantity', e.target.value)}
+                required
               />
               <input
                 type="number" min="0" placeholder="Rate"

@@ -10,6 +10,7 @@ const emptyForm = {
 function EnquiryForm({ onSubmit, editingEnquiry, onCancel }) {
   const [formData, setFormData] = useState(emptyForm);
   const [employees, setEmployees] = useState([]);
+  const [error, setError] = useState('');
 
   useEffect(() => { getEmployees().then(res => setEmployees(res.data)); }, []);
 
@@ -19,18 +20,33 @@ function EnquiryForm({ onSubmit, editingEnquiry, onCancel }) {
     } else {
       setFormData(emptyForm);
     }
+    setError('');
   }, [editingEnquiry]);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setError('');
+
+    // Validate 10-digit mobile number
+    const mobileRegex = /^\d{10}$/;
+    if (!mobileRegex.test(formData.mobile_number.trim())) {
+      setError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+
     onSubmit(formData);
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <div className="modal-body">
+        {error && (
+          <div style={{ background: '#FEE2E2', color: '#B91C1C', padding: '10px 14px', borderRadius: 8, fontSize: 14, marginBottom: 16, fontWeight: 500 }}>
+            {error}
+          </div>
+        )}
         <div className="field-grid">
           <div className="field">
             <label>Client Name*</label>
@@ -41,12 +57,12 @@ function EnquiryForm({ onSubmit, editingEnquiry, onCancel }) {
             <input name="company_name" value={formData.company_name} onChange={handleChange} />
           </div>
           <div className="field">
-            <label>Mobile Number*</label>
-            <input name="mobile_number" value={formData.mobile_number} onChange={handleChange} required />
+            <label>Mobile Number* (10 digits)</label>
+            <input name="mobile_number" maxLength="10" placeholder="e.g. 9876543210" value={formData.mobile_number} onChange={handleChange} required />
           </div>
           <div className="field">
             <label>Email ID</label>
-            <input name="email" value={formData.email} onChange={handleChange} />
+            <input type="email" name="email" value={formData.email} onChange={handleChange} />
           </div>
           <div className="field field-full">
             <label>Address</label>
