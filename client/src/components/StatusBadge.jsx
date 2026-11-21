@@ -7,6 +7,9 @@ const dotColors = {
   Sent: '#3B6EA8',
   Accepted: '#2F7D52',
   Rejected: '#B42318',
+  Paid: '#2F7D52',
+  Partial: '#B7791F',
+  Pending: '#B42318',
 };
 
 function StatusBadge({ status }) {

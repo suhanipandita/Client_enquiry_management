@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 const db = require('./db');
 
@@ -8,6 +9,7 @@ const PORT = process.env.PORT || 5001;
 
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get('/api/health', async (req, res) => {
   try {
@@ -29,6 +31,9 @@ app.use('/api/clients', clientRoutes);
 
 const quotationRoutes = require('./routes/quotationRoutes');
 app.use('/api/quotations', quotationRoutes);
+
+const paymentRoutes = require('./routes/paymentRoutes');
+app.use('/api/payments', paymentRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

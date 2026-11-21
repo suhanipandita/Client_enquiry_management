@@ -29,7 +29,7 @@ function EnquiriesPage() {
       setShowPanel(true);
       setSearchParams({}, { replace: true });
     }
-  }, []);
+  }, [searchParams, setSearchParams]);
 
   const closeModal = () => { setShowPanel(false); setEditingEnquiry(null); };
 
@@ -50,6 +50,32 @@ function EnquiriesPage() {
     setEnquiries(res.data);
   };
 
+  const exportToCSV = () => {
+    const headers = ['ID', 'Client Name', 'Company Name', 'Mobile Number', 'Email', 'Source', 'Service Required', 'Status', 'Follow-up Date', 'Created At'];
+    const rows = enquiries.map(e => [
+      e.id,
+      `"${(e.client_name || '').replace(/"/g, '""')}"`,
+      `"${(e.company_name || '').replace(/"/g, '""')}"`,
+      e.mobile_number,
+      e.email || '',
+      e.source,
+      e.service_required,
+      e.status,
+      e.follow_up_date || '',
+      e.created_at ? e.created_at.slice(0, 10) : ''
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `enquiries_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const visible = activeFilter === 'All' ? enquiries : enquiries.filter(e => e.status === activeFilter);
 
   return (
@@ -59,9 +85,14 @@ function EnquiriesPage() {
           <h1 className="page-title">Client Enquiries</h1>
           <p className="page-sub">Track and manage all inbound enquiries.</p>
         </div>
-        <button className="btn-primary" onClick={() => { setEditingEnquiry(null); setShowPanel(true); }}>
-          + Add Enquiry
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn-secondary" onClick={exportToCSV}>
+            Export CSV
+          </button>
+          <button className="btn-primary" onClick={() => { setEditingEnquiry(null); setShowPanel(true); }}>
+            + Add Enquiry
+          </button>
+        </div>
       </div>
 
       <div className="toolbar">

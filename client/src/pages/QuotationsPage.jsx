@@ -101,7 +101,7 @@ function QuotationsPage() {
                   <td className="num">₹{Number(q.total_amount).toLocaleString('en-IN')}</td>
                   <td><StatusBadge status={q.status} /></td>
                   <td className="num">
-                    <button className="link-btn" onClick={() => generateQuotationPDF(q)}>PDF</button>
+                    <button className="link-btn" onClick={() => generateQuotationPDF(q)}>PDF</button><br />
                     <button className="link-btn" onClick={() => openEdit(q)}>View</button>
                   </td>
                 </tr>
