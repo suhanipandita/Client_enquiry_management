@@ -2,54 +2,61 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatDate } from './dates';
 
-export const generateQuotationPDF = (quotation) => {
+export const generateQuotationPDF = (quotation, mode = 'download') => {
   const doc = new jsPDF();
 
   // 1. Header & Branding
   doc.setFontSize(22);
   doc.setTextColor(40);
   doc.text('CODEXLABZ', 14, 22);
-  
+
   doc.setFontSize(10);
   doc.setTextColor(100);
-  doc.text('Business Management System', 14, 30);
+  doc.text('Codexlabz Technologies', 14, 29);
 
   // 2. Document Title & Meta
   doc.setFontSize(16);
   doc.setTextColor(40);
-  doc.text('QUOTATION / PROPOSAL', 130, 22);
-  
+  doc.text('QUOTATION / PROPOSAL', 128, 22);
+
   doc.setFontSize(10);
   doc.setTextColor(100);
-  doc.text(`Quote No: ${quotation.quotation_number}`, 130, 30);
-  doc.text(`Date: ${formatDate(quotation.quotation_date)}`, 130, 36);
-  doc.text(`Valid Until: ${formatDate(quotation.valid_until)}`, 130, 42);
+  doc.text(`Quote No: ${quotation.quotation_number}`, 128, 30);
+  doc.text(`Date: ${formatDate(quotation.quotation_date)}`, 128, 36);
+  doc.text(`Valid Until: ${formatDate(quotation.valid_until)}`, 128, 42);
+  doc.text(`Status: ${quotation.status}`, 128, 48);
 
   // 3. Client Details
   doc.setTextColor(40);
-  doc.text('Bill To:', 14, 45);
   doc.setFont(undefined, 'bold');
-  doc.text(quotation.client_name || 'Client', 14, 51);
+  doc.text('Prepared For:', 14, 46);
+  doc.text(quotation.client_name || 'Client', 14, 52);
   doc.setFont(undefined, 'normal');
-  doc.text(`Proposal Type: ${quotation.proposal_type || '—'}`, 14, 57);
+  let clientY = 58;
+  if (quotation.company_name) {
+    doc.text(quotation.company_name, 14, clientY);
+    clientY += 6;
+  }
+  doc.text(`Proposal Type: ${quotation.proposal_type || '—'}`, 14, clientY);
+  clientY += 6;
 
   // 4. Line Items Table
-  // Note: Adjust the keys (description, quantity, price, total) to match your DB schema
-  const tableColumns = ['Description', 'Qty', 'Price (INR)', 'Total (INR)'];
-  const tableRows = [];
-
-  const items = quotation.items || quotation.line_items || [];
-  items.forEach(item => {
-    tableRows.push([
+  const tableColumns = ['Description', 'Qty', 'Rate (INR)', 'Amount (INR)'];
+  const items = Array.isArray(quotation.items) ? quotation.items : [];
+  const tableRows = items.map((item) => {
+    const qty = Number(item.quantity) || 1;
+    const rate = Number(item.rate ?? item.price ?? 0);
+    const amount = Number(item.amount ?? item.total ?? qty * rate);
+    return [
       item.description || '—',
-      item.quantity || 1,
-      `Rs. ${Number(item.price || 0).toLocaleString('en-IN')}`,
-      `Rs. ${Number(item.total || item.amount || 0).toLocaleString('en-IN')}`
-    ]);
+      qty,
+      `Rs. ${rate.toLocaleString('en-IN')}`,
+      `Rs. ${amount.toLocaleString('en-IN')}`,
+    ];
   });
 
   autoTable(doc, {
-    startY: 65,
+    startY: Math.max(clientY + 4, 72),
     head: [tableColumns],
     body: tableRows,
     theme: 'striped',
@@ -57,15 +64,47 @@ export const generateQuotationPDF = (quotation) => {
     styles: { fontSize: 10, cellPadding: 5 },
   });
 
-  const finalY = doc.lastAutoTable.finalY || 65;
+  const finalY = doc.lastAutoTable.finalY || 80;
 
   // 5. Totals
-  doc.setFont(undefined, 'bold');
-  doc.text(`Subtotal: Rs. ${Number(quotation.subtotal || 0).toLocaleString('en-IN')}`, 130, finalY + 12);
-  doc.text(`Total Amount (incl. GST): Rs. ${Number(quotation.total_amount || 0).toLocaleString('en-IN')}`, 130, finalY + 20);
+  const subtotal = Number(quotation.subtotal || 0);
+  const discount = Number(quotation.discount || 0);
+  const taxable = Math.max(subtotal - discount, 0);
+  const gstAmount = quotation.gst_applied ? Number((taxable * 0.18).toFixed(2)) : 0;
 
-  // 6. Save File
-  doc.save(`Quotation_${quotation.quotation_number}.pdf`);
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
+  doc.text(`Subtotal: Rs. ${subtotal.toLocaleString('en-IN')}`, 128, finalY + 12);
+  doc.text(`Discount: - Rs. ${discount.toLocaleString('en-IN')}`, 128, finalY + 18);
+  if (quotation.gst_applied) {
+    doc.text(`GST (18%): Rs. ${gstAmount.toLocaleString('en-IN')}`, 128, finalY + 24);
+  }
+
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  const totalY = quotation.gst_applied ? finalY + 32 : finalY + 26;
+  doc.text(`Total Amount: Rs. ${Number(quotation.total_amount || 0).toLocaleString('en-IN')}`, 128, totalY);
+
+  // 6. Terms & Notes
+  let footerY = totalY + 14;
+  doc.setFontSize(9);
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(100);
+  if (quotation.terms) {
+    doc.text(`Terms & Conditions: ${quotation.terms}`, 14, footerY, { maxWidth: 180 });
+    footerY += 12;
+  }
+  if (quotation.notes) {
+    doc.text(`Notes: ${quotation.notes}`, 14, footerY, { maxWidth: 180 });
+  }
+
+  // 7. Print or Download
+  if (mode === 'print') {
+    doc.autoPrint();
+    window.open(doc.output('bloburl'), '_blank');
+  } else {
+    doc.save(`Quotation_${quotation.quotation_number}.pdf`);
+  }
 };
 
 export const generateInvoicePDF = (invoice, mode = 'download') => {
