@@ -4,6 +4,7 @@ import DashboardPage from './pages/DashboardPage';
 import EnquiriesPage from './pages/EnquiriesPage';
 import QuotationsPage from './pages/QuotationsPage';
 import ClientPayments from './pages/PaymentsPage';
+import InvoicesPage from './pages/InvoicesPage';
 
 function ComingSoon({ name }) {
   return (
@@ -23,8 +24,8 @@ function App() {
           <Route path="/enquiries" element={<EnquiriesPage />} />
           <Route path="/quotations" element={<QuotationsPage />} />
           <Route path="/payments" element={<ClientPayments />} />
+          <Route path="/invoices" element={<InvoicesPage />} />
           {[
-            ['/invoices', 'Invoices'],
             ['/employee-payments', 'Employee Payments'],
             ['/expenses', 'Expenses'],
             ['/amc', 'Website AMC'],

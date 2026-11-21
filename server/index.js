@@ -35,6 +35,9 @@ app.use('/api/quotations', quotationRoutes);
 const paymentRoutes = require('./routes/paymentRoutes');
 app.use('/api/payments', paymentRoutes);
 
+const invoiceRoutes = require('./routes/invoiceRoutes')
+app.use('/api/invoices', invoiceRoutes);
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
